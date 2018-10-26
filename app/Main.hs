@@ -54,7 +54,7 @@ runSimulation tm input shouldAccept = do
 
 testTM :: TM State Symbol -> IO ()
 testTM tm =
-  forM_ [0..32] $ \(i :: Int) -> do
+  forM_ (reverse [0..32]) $ \(i :: Int) -> do
     let word = replicate i 'a'
     runSimulation tm word (i `elem` [ 2^n | (n :: Int) <- [0..10] ])
 
