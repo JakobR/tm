@@ -26,7 +26,7 @@ printConfiguration :: TM State Symbol -> Configuration State Symbol -> IO ()
 printConfiguration TM{..} Configuration{..} = do
   putStr $ Text.unpack cfState
   putStr ":\t"
-  putStr cfLeftTape
+  putStr $ reverse cfLeftTape
   setSGR [ SetUnderlining SingleUnderline
          , SetConsoleIntensity BoldIntensity
          , SetColor Foreground Dull Yellow ]
@@ -41,7 +41,8 @@ runSimulation tm input shouldAccept = do
   let (result, trace) = simulate 10000 tm input
       showInput = if null input then "ε" else input
       success = putStrLn $ "Success: " <> showInput
-      failure = do putStrLn $ "Error (should " <> if shouldAccept then "" else "not " <> "accept): " <> showInput
+      failure = do let showNot = if shouldAccept then "" else "not "
+                   putStrLn $ "Error (should " <> showNot <> "accept): " <> showInput
                    mapM_ (printConfiguration tm) trace
                    print result
                    putChar '\n'
