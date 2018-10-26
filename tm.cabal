@@ -1,0 +1,28 @@
+cabal-version:      2.2
+name:               tm
+version:            0.1.0.0
+synopsis:           Turing Machine Simulator
+-- description:
+license:            GPL-3.0-or-later
+license-file:       LICENSE
+author:             Jakob Rath
+maintainer:         git@jakobrath.eu
+category:           Logic
+build-type:         Simple
+extra-source-files: README.md
+
+common warnings
+  ghc-options:      -Wall
+                    -Wcompat
+                    -Wincomplete-record-updates
+                    -Wincomplete-uni-patterns
+                    -Wredundant-constraints
+                    -Wnoncanonical-monad-instances
+
+executable tm
+  import:           warnings
+  main-is:          Main.hs
+  -- other-modules:
+  build-depends:    base >=4.11 && <4.12
+  hs-source-dirs:   src
+  default-language: Haskell2010
