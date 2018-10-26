@@ -75,7 +75,8 @@ step TM{..} Configuration{..} = do
                        , cfRightTape = tailSafe cfRightTape
                        }
   where
-    doTrimBlanks = False
+    -- NOTE: Loop detection works better if we normalize the configurations
+    doTrimBlanks = True
     trimBlanks = if doTrimBlanks then trimBlanks3 tmBlankSymbol else id
 
 -- | removes unneeded blank symbols at the border of the tape (only checks three symbols, which should be enough when it's done after every step)
