@@ -39,22 +39,21 @@ printConfiguration TM{..} Configuration{..} = do
 runSimulation :: TM State Symbol -> [Symbol] -> Bool -> IO ()
 runSimulation tm input shouldAccept = do
   let (result, trace) = simulate 10000 tm input
+      showInput = if null input then "ε" else input
+      success = putStrLn $ "Success: " <> showInput
+      failure = do putStrLn $ "Error (should " <> if shouldAccept then "" else "not " <> "accept): " <> showInput
+                   mapM_ (printConfiguration tm) trace
+                   print result
+                   putChar '\n'
   case result of
-    Accept -> if shouldAccept
-              then putStrLn $ "Success: " <> input
-              else do putStrLn $ "Error (accepted but should not accept): " <> input
-                      mapM_ (printConfiguration tm) trace
-                      putChar '\n'
-    Timeout -> putStrLn $ "Timeout: " <> input
-    _ -> if shouldAccept
-         then do putStrLn $ "Error (" <> show result <> " but should accept): " <> input
-                 mapM_ (printConfiguration tm) trace
-                 putChar '\n'
-         else putStrLn $ "Success: " <> input
+    Accept -> if shouldAccept then success else failure
+    Reject -> if shouldAccept then failure else success
+    Loop ->   if shouldAccept then failure else success
+    Timeout -> putStrLn $ "Timeout: " <> showInput
 
 testTM :: TM State Symbol -> IO ()
 testTM tm =
-  forM_ [1..16] $ \(i :: Int) -> do
+  forM_ [0..16] $ \(i :: Int) -> do
     let word = replicate i 'a'
     runSimulation tm word (i `elem` [ 2^n | (n :: Int) <- [0..10] ])
 
