@@ -1,17 +1,18 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
 
-module Main where
-
--- base
-import Control.Monad ( forM_, mapM_ )
-
--- ansi-terminal
-import System.Console.ANSI (
-  setSGR, SGR(..), ConsoleLayer(..), Color(..), ColorIntensity(..), ConsoleIntensity(..), Underlining(..)
-  )
+module TuringMachine
+  ( State
+  , Symbol
+  , Movement(..)
+  , TM(..)
+  , Configuration(..)
+  , step
+  , simulate
+  , SimulationResult(..)
+  , simulate'
+  , SimulationResult'(..)
+  ) where
 
 -- containers
 import Data.Map ( Map )
@@ -25,22 +26,16 @@ import Control.Monad.Except ( MonadError(..), runExceptT )
 
 -- text
 import Data.Text ( Text )
-import qualified Data.Text as Text
 
 -- safe
 import Safe ( headDef, tailSafe )
 
 
 type State = Text
+
 type Symbol = Char
+
 data Movement = L | S | R
--- data Transition state symbol = Transition
---   { tCurState :: state
---   , tCurSymbol :: symbol
---   , tMovement :: Movement
---   , tNextState :: state
---   , tNextSymbol :: symbol
---   }
 
 data TM state symbol = TM
   { tmInitialState :: state
@@ -56,29 +51,6 @@ data Configuration state symbol = Configuration
   }
   deriving (Eq, Ord, Show)
 
-tmBJ :: TM State Symbol
-tmBJ = TM{..}
-  where
-    tmInitialState = "q1"
-    tmFinalState = "q6"
-    tmBlankSymbol = 'B'
-    tmTransitions = Map.fromList
-      [ ("q1",'a') `to` ("q2",'B',R)
-      , ("q2",'a') `to` ("q3",'X',R)
-      , ("q3",'a') `to` ("q4",'a',R)
-      , ("q4",'a') `to` ("q3",'X',R)
-      , ("q5",'a') `to` ("q5",'a',L)
-      , ("q2",'X') `to` ("q2",'X',R)
-      , ("q3",'X') `to` ("q3",'X',R)
-      , ("q4",'X') `to` ("q4",'X',R)
-      , ("q5",'X') `to` ("q5",'X',L)
-      , ("q2",'B') `to` ("q6",'B',R)
-      , ("q3",'B') `to` ("q5",'B',L)
-      , ("q5",'B') `to` ("q2",'B',R)
-      ]
-    -- t :: Text -> Char -> Text -> Char -> Movement -> ((Text, Char), (Text, Char, Movement))
-    -- t st sy st' sy' mv = ((st,sy),(st',sy',mv))
-    to = (,)
 
 -- | Simulate one step of the given Turing Machine.
 -- Returns `Nothing` if no transition exists for the current configuration.
@@ -103,8 +75,8 @@ step TM{..} Configuration{..} = do
                        , cfRightTape = tailSafe cfRightTape
                        }
   where
-    -- trimBlanks = trimBlanks3 tmBlankSymbol
-    trimBlanks = id  -- NOTE: uncomment this to disable blank trimming
+    doTrimBlanks = False
+    trimBlanks = if doTrimBlanks then trimBlanks3 tmBlankSymbol else id
 
 -- | removes unneeded blank symbols at the border of the tape (only checks three symbols, which should be enough when it's done after every step)
 trimBlanks3 :: Eq symbol => symbol -> [symbol] -> [symbol]
@@ -160,53 +132,3 @@ simulate' maxSteps seenCfs tm@TM{..} cf@Configuration{..} = do
       if newCf `Set.member` seenCfs
       then return Loop'
       else simulate' (maxSteps - 1) (newCf `Set.insert` seenCfs) tm newCf
-
-
-printConfiguration :: TM State Symbol -> Configuration State Symbol -> IO ()
-printConfiguration TM{..} Configuration{..} = do
-  putStr $ Text.unpack cfState
-  putStr ":\t"
-  putStr cfLeftTape
-  setSGR [ SetUnderlining SingleUnderline
-         , SetConsoleIntensity BoldIntensity
-         , SetColor Foreground Dull Yellow ]
-  putChar (headDef tmBlankSymbol cfRightTape)
-  setSGR []
-  putStr (tailSafe cfRightTape)
-  putChar '\n'
-
-
-runSimulation :: TM State Symbol -> [Symbol] -> Bool -> IO ()
-runSimulation tm input shouldAccept = do
-  let (result, trace) = simulate 10000 tm input
-  case result of
-    Accept -> if shouldAccept
-              then putStrLn $ "Success: \t" <> input
-              else do putStrLn $ "Error (accepted but should not accept): " <> input
-                      mapM_ (printConfiguration tm) trace
-                      putChar '\n'
-    Timeout -> putStrLn $ "Timeout: " <> input
-    _ -> if shouldAccept
-         then do putStrLn $ "Error (" <> show result <> " but should accept): " <> input
-                 mapM_ (printConfiguration tm) trace
-                 putChar '\n'
-         else putStrLn $ "Success: \t" <> input
-
-testTM :: TM State Symbol -> IO ()
-testTM tm =
-  forM_ [1..16] $ \(i :: Int) -> do
-    let word = replicate i 'a'
-    runSimulation tm word (i `elem` [ 2^n | (n :: Int) <- [0..10] ])
-
-main :: IO ()
-main = do
-  -- runSimulation tmBJ "a" True
-  testTM tmBJ
-  -- let initialCf = Configuration { cfLeftTape = []
-  --                               , cfState = tmInitialState tmBJ
-  --                               , cfRightTape = "a"
-  --                               }
-  -- let (result, trace) = runWriter $ runExceptT $ simulate' 10000 mempty tmBJ initialCf
-  -- forM_ trace $ \cf ->
-  --   printConfiguration tmBJ cf
-  -- print result
