@@ -8,6 +8,9 @@ import qualified Data.Map as Map
 -- tm
 import TuringMachine
 
+tmForTesting :: TM State Symbol
+tmForTesting = tmBJ
+
 tmBJ :: TM State Symbol
 tmBJ = TM{..}
   where

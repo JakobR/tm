@@ -60,4 +60,4 @@ testTM tm =
 
 main :: IO ()
 main = do
-  testTM TuringMachine.Examples.tmBJ
+  testTM TuringMachine.Examples.tmForTesting
