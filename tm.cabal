@@ -24,6 +24,7 @@ executable tm
   main-is:          Main.hs
   -- other-modules:
   build-depends:    base >=4.11 && <4.12
+                  , ansi-terminal
                   , containers
                   , mtl
                   , text
