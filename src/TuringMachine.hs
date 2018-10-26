@@ -101,7 +101,7 @@ simulate maxSteps tm@TM{..} inputWord =
                                 , cfState = tmInitialState
                                 , cfRightTape = inputWord
                                 }
-      (result', trace) = runWriter $ runExceptT $ simulate' maxSteps mempty tm initialCf
+      (result', trace) = runWriter $ runExceptT $ simulate' maxSteps (Set.singleton initialCf) tm initialCf
       result = case result' of
         Left _ -> Timeout
         Right Accept' -> Accept
