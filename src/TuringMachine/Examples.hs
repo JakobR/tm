@@ -8,6 +8,7 @@ import qualified Data.Map as Map
 -- tm
 import TuringMachine
 
+
 tmAL :: TM State Symbol
 tmAL = TM{..}
   where
@@ -152,8 +153,112 @@ tmLF = TM{..}
       , ("q8",'l') `to` ("qE",'l',S)
       ]
 
+tmGD :: TM State Symbol
+tmGD = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "q7"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'a',R)
+      , ("q1",'a') `to` ("q2",'X',R)
+      , ("q2",'a') `to` ("q3",'a',R)
+      , ("q3",'a') `to` ("q2",'X',R)
+      , ("q4",'a') `to` ("q5",'a',L)
+      , ("q6",'a') `to` ("q6",'a',L)
+
+      , ("q0",'X') `to` ("q0",'X',R)
+      , ("q2",'X') `to` ("q2",'X',R)
+      , ("q3",'X') `to` ("q3",'X',R)
+      , ("q4",'X') `to` ("q4",'X',L)
+      , ("q5",'X') `to` ("q6",'X',L)
+      , ("q6",'X') `to` ("q6",'X',L)
+
+      , ("q0",'B') `to` ("q0",'B',R)
+      , ("q1",'B') `to` ("q7",'B',R)
+      , ("q2",'B') `to` ("q4",'B',L)
+      , ("q5",'B') `to` ("q7",'B',R)
+      , ("q6",'B') `to` ("q2",'B',R)
+      ]
+
+tmHP :: TM State Symbol
+tmHP = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "qe"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'X',R)
+      , ("q1",'a') `to` ("q2",'a',R)
+      , ("q2",'a') `to` ("q3",'a',R)
+      , ("q3",'a') `to` ("q2",'a',R)
+      , ("q4",'a') `to` ("q5",'X',L)
+      , ("q5",'a') `to` ("q6",'a',L)
+      , ("q6",'a') `to` ("q3",'X',R)
+
+      , ("q2",'X') `to` ("q4",'X',L)
+      , ("q3",'X') `to` ("qe",'X',S)
+      , ("q5",'X') `to` ("q6",'X',R)
+      , ("q6",'X') `to` ("q7",'B',L)
+      , ("q7",'X') `to` ("q7",'a',L)
+
+      , ("q1",'B') `to` ("qe",'B',S)
+      , ("q2",'B') `to` ("q4",'B',L)
+      , ("q5",'B') `to` ("q6",'B',R)
+      , ("q7",'B') `to` ("q2",'B',R)
+      ]
+
+tmJD :: TM State Symbol
+tmJD = TM{..}
+  where
+    tmInitialState = "init0"
+    tmFinalState = "r1"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("init0",     'a') `to` ("init1",     'a',R)  -- init1 instead of init0
+      , ("init1",     'a') `to` ("initEven",  'X',R)
+      , ("initEven",  'a') `to` ("initUneven",'a',R)
+      , ("initUneven",'a') `to` ("initEven",  'X',R)
+      , ("l",         'a') `to` ("l",         'a',L)
+      , ("r0",        'a') `to` ("r0",        'a',R)
+      , ("r1",        'a') `to` ("r1a",       'a',R)
+      , ("r1a",       'a') `to` ("r1a",       'a',R)
+      , ("rUneven",   'a') `to` ("rUneven",   'a',R)
+      , ("rEven",     'a') `to` ("rEven",     'a',R)
+
+      , ("initEven",  'B') `to` ("l",         'B',L)
+      , ("l",         'B') `to` ("r0",        'B',R)
+      , ("rEven",     'B') `to` ("l",         'B',L)  -- l statt l0
+
+      , ("l",         'X') `to` ("l",         'X',L)
+      , ("r0",        'X') `to` ("r1",        'a',R)
+      , ("r1a",       'X') `to` ("rEven",     'X',R)
+      , ("rUneven",   'X') `to` ("rEven",     'X',R)
+      , ("rEven",     'X') `to` ("rUneven",   'a',R)
+
+      -- init1 should also be accepting
+      , ("init1",'B') `to` ("r1",'B',S)
+      , ("init1",'X') `to` ("r1",'X',S)
+      ]
+
+tmKP :: TM State Symbol
+tmKP = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "q4"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'X',R)
+      , ("q1",'a') `to` ("q2",'X',R)
+      , ("q2",'a') `to` ("q3",'X',R)
+      , ("q3",'a') `to` ("q2",'X',R)
+
+      , ("q1",'B') `to` ("q4",'B',R)
+      , ("q2",'B') `to` ("q4",'B',R)
+      ]
+
 tmForTesting :: TM State Symbol
-tmForTesting = tmLF
+tmForTesting = tmKP
 
 -- t :: Text -> Char -> Text -> Char -> Movement -> ((Text, Char), (Text, Char, Movement))
 -- t st sy st' sy' mv = ((st,sy),(st',sy',mv))
