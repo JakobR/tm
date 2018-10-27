@@ -257,8 +257,76 @@ tmKP = TM{..}
       , ("q2",'B') `to` ("q4",'B',R)
       ]
 
+tmKN :: TM State Symbol
+tmKN = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "q8"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'a',R)
+      , ("q1",'a') `to` ("q3",'a',L)
+      , ("q3",'a') `to` ("q4",'A',R)
+      , ("q4",'a') `to` ("q4",'a',R)
+      , ("q5",'a') `to` ("q6",'B',L)
+      , ("q6",'a') `to` ("q7",'a',L)
+      , ("q7",'a') `to` ("q7",'a',L)
+
+      , ("q1",'A') `to` ("q2",'a',L)
+      , ("q2",'A') `to` ("q2",'a',L)
+      , ("q6",'A') `to` ("q1",'a',L)
+      , ("q7",'A') `to` ("q3",'A',R)
+
+      , ("q1",'B') `to` ("q8",'B',S)
+      , ("q2",'B') `to` ("q3",'B',R)
+      , ("q4",'B') `to` ("q5",'B',L)
+      , ("q7",'B') `to` ("q3",'B',R)
+      ]
+
+tmMAL :: TM State Symbol
+tmMAL = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "q4"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'B',R)
+      , ("q1",'a') `to` ("q1",'a',R)
+      , ("q2",'a') `to` ("q3",'B',L)
+      , ("q3",'a') `to` ("q3",'a',L)
+
+      , ("q0",'B') `to` ("q4",'B',S)
+      , ("q1",'B') `to` ("q2",'B',L)
+      , ("q3",'B') `to` ("q0",'B',R)
+      ]
+
+tmSD :: TM State Symbol
+tmSD = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "q6"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'B',R)
+      , ("q1",'a') `to` ("q2",'X',R)
+      , ("q2",'a') `to` ("q3",'a',R)
+      , ("q3",'a') `to` ("q2",'X',R)
+      , ("q4",'a') `to` ("q4",'a',L)
+
+      , ("q1",'X') `to` ("q1",'X',R)
+      , ("q2",'X') `to` ("q2",'X',R)
+      , ("q3",'X') `to` ("q3",'X',R)
+      , ("q4",'X') `to` ("q4",'X',L)
+
+      , ("q0",'B') `to` ("q5",'B',R)
+      , ("q1",'B') `to` ("q6",'B',R)
+      , ("q2",'B') `to` ("q4",'B',L)
+      , ("q3",'B') `to` ("q5",'B',R)
+      , ("q4",'B') `to` ("q1",'B',R)
+      ]
+
 tmForTesting :: TM State Symbol
-tmForTesting = tmKP
+tmForTesting = tmSD
 
 -- t :: Text -> Char -> Text -> Char -> Movement -> ((Text, Char), (Text, Char, Movement))
 -- t st sy st' sy' mv = ((st,sy),(st',sy',mv))
