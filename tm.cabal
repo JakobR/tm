@@ -23,6 +23,8 @@ library
   import:           warnings
   exposed-modules:  TuringMachine
                   , TuringMachine.Examples
+                  , TuringMachine.Tape
+                  , TuringMachine.TwoTapes
   build-depends:    base >=4.11 && <4.12
                   , containers
                   , mtl
