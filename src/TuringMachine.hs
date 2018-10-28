@@ -133,3 +133,4 @@ simulate' maxSteps seenCfs tm@TM{..} cf@Configuration{..} = do
       if newCf `Set.member` seenCfs
       then return Loop'
       else simulate' (maxSteps - 1) (newCf `Set.insert` seenCfs) tm newCf
+      -- TODO: Detect loop where machine just runs off the end of the tape (only encountering blanks)

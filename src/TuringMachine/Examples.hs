@@ -325,8 +325,120 @@ tmSD = TM{..}
       , ("q4",'B') `to` ("q1",'B',R)
       ]
 
+tmSS :: TM State Symbol
+tmSS = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "q5"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'x',R)
+      , ("q1",'a') `to` ("q2",'a',R)
+      , ("q2",'a') `to` ("q3",'x',R)
+      , ("q3",'a') `to` ("q2",'a',R)
+      , ("q4",'a') `to` ("q4",'a',L)
+
+      , ("q0",'x') `to` ("q0",'x',R)
+      -- , ("q1",'x') `to` ("q1",'x',R)  -- works if we add this
+      , ("q2",'x') `to` ("q2",'x',R)
+      , ("q3",'x') `to` ("q3",'x',R)
+      , ("q4",'x') `to` ("q4",'x',L)
+
+      , ("q1",'B') `to` ("q5",'B',R)
+      , ("q2",'B') `to` ("q4",'B',L)
+      , ("q4",'B') `to` ("q0",'B',R)
+      ]
+
+tmSLJ :: TM State Symbol
+tmSLJ = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "qP"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'B',R)
+      , ("q1",'a') `to` ("q2",'X',R)
+      , ("q2",'a') `to` ("q3",'a',R)
+      , ("q3",'a') `to` ("q2",'X',R)
+      , ("q4",'a') `to` ("q4",'a',L)
+
+      , ("q0",'X') `to` ("qN",'B',R)
+      , ("q1",'X') `to` ("q1",'X',R)
+      , ("q2",'X') `to` ("q2",'X',R)
+      , ("q3",'X') `to` ("q3",'X',R)
+      , ("q4",'X') `to` ("q4",'X',L)
+
+      , ("q0",'B') `to` ("qN",'B',R)
+      , ("q1",'B') `to` ("qP",'B',R)
+      , ("q2",'B') `to` ("q4",'B',L)
+      , ("q3",'B') `to` ("qN",'B',R)
+      , ("q4",'B') `to` ("q1",'B',R)
+      ]
+
+tmTC :: TM State Symbol
+tmTC = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "q5"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'Z',R)
+      , ("q1",'a') `to` ("q2",'a',L)
+      , ("q3",'a') `to` ("q4",'Z',S)
+
+      , ("q1",'X') `to` ("q3",'Y',R)
+      , ("q3",'X') `to` ("q3",'X',R)
+      , ("q4",'X') `to` ("q4",'X',L)
+
+      , ("q2",'Y') `to` ("q2",'X',L)
+      , ("q4",'Y') `to` ("q1",'Y',R)
+
+      , ("q1",'Z') `to` ("q1",'Z',R)
+      , ("q2",'Z') `to` ("q2",'X',L)
+      , ("q3",'Z') `to` ("q3",'Z',R)
+      , ("q4",'Z') `to` ("q4",'Z',L)
+
+      , ("q1",'B') `to` ("q5",'B',R)
+      , ("q2",'B') `to` ("q1",'B',R)
+
+      , ("q0",'X') `to` ("qN",'B',R)
+      , ("q1",'X') `to` ("q1",'X',R)
+      , ("q2",'X') `to` ("q2",'X',R)
+      , ("q3",'X') `to` ("q3",'X',R)
+      , ("q4",'X') `to` ("q4",'X',L)
+
+      , ("q0",'B') `to` ("qN",'B',R)
+      , ("q1",'B') `to` ("qP",'B',R)
+      , ("q2",'B') `to` ("q4",'B',L)
+      , ("q3",'B') `to` ("qN",'B',R)
+      , ("q4",'B') `to` ("q1",'B',R)
+      ]
+
+tmWJ :: TM State Symbol
+tmWJ = TM{..}
+  where
+    tmInitialState = "q0"
+    tmFinalState = "q5"
+    tmBlankSymbol = 'B'
+    tmTransitions = Map.fromList
+      [ ("q0",'a') `to` ("q1",'a',R)
+      , ("q1",'a') `to` ("q2",'X',R)
+      , ("q2",'a') `to` ("q3",'a',R)
+      , ("q3",'a') `to` ("q2",'X',R)
+      , ("q4",'a') `to` ("q4",'a',L)
+
+      , ("q1",'B') `to` ("q5",'B',S)
+      , ("q2",'B') `to` ("q4",'B',L)
+      , ("q4",'B') `to` ("q0",'B',R)
+
+      , ("q1",'X') `to` ("q1",'X',R)
+      , ("q2",'X') `to` ("q2",'X',R)
+      , ("q3",'X') `to` ("q3",'X',R)
+      , ("q4",'X') `to` ("q4",'X',L)
+      ]
+
 tmForTesting :: TM State Symbol
-tmForTesting = tmSD
+tmForTesting = tmWJ
 
 -- t :: Text -> Char -> Text -> Char -> Movement -> ((Text, Char), (Text, Char, Movement))
 -- t st sy st' sy' mv = ((st,sy),(st',sy',mv))

@@ -40,14 +40,15 @@ runSimulation :: TM State Symbol -> [Symbol] -> Bool -> IO ()
 runSimulation tm input shouldAccept = do
   let (result, trace) = simulate 10000 tm input
       showInput = if null input then "ε" else input
+      putTrace = do mapM_ (printConfiguration tm) trace
+                    print result
+                    putChar '\n'
       success = putStrLn $ "Success: " <> showInput
       failure = do let showNot = if shouldAccept then "" else "not "
                    putStrLn $ "Error (should " <> showNot <> "accept): " <> showInput
-                   mapM_ (printConfiguration tm) trace
-                   print result
-                   putChar '\n'
+                   putTrace
   case result of
-    Accept -> if shouldAccept then success else failure
+    Accept -> if shouldAccept then success {- >> putTrace -} else failure
     Reject -> if shouldAccept then failure else success
     Loop ->   if shouldAccept then failure else success
     Timeout -> putStrLn $ "Timeout: " <> showInput
