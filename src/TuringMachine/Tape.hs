@@ -8,10 +8,19 @@ module TuringMachine.Tape
   , writeTape
   , moveTape
   , writeAndMoveTape
+  , putTape
   ) where
+
+-- ansi-terminal
+import System.Console.ANSI (
+  setSGR, SGR(..), ConsoleLayer(..), Color(..), ColorIntensity(..), ConsoleIntensity(..), Underlining(..)
+  )
 
 -- safe
 import Safe ( headDef, tailSafe )
+
+-- tm
+import TuringMachine.Class ( PrintableTMSymbol(..) )
 
 
 data Movement = L | S | R
@@ -86,3 +95,16 @@ trimBlanks3 b [x, y]
 trimBlanks3 b [x, y, z]
   | z == b = trimBlanks3 b [x, y]
 trimBlanks3 _ xs = xs
+
+putTape
+  :: PrintableTMSymbol symbol
+  => Tape symbol
+  -> IO ()
+putTape t@Tape{..} = do
+  putSymbols $ reverse tapeLeft
+  setSGR [ SetUnderlining SingleUnderline
+         , SetConsoleIntensity BoldIntensity
+         , SetColor Foreground Dull Yellow ]
+  putSymbol (readTape t)
+  setSGR []
+  putSymbols (tailSafe tapeRight)

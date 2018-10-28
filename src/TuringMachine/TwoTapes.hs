@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module TuringMachine.TwoTapes
   ( State
@@ -29,6 +30,8 @@ import Control.Monad.Except ( MonadError(..), runExceptT )
 import Data.Text ( Text )
 
 -- tm
+import TuringMachine.Class ( SimulationResult(..), PrintableTMState(..), PrintableTMSymbol(..) )
+import qualified TuringMachine.Class
 import TuringMachine.Tape
 
 
@@ -42,9 +45,9 @@ data TM state symbol = TM
   , tmFinalStates :: Set state
   , tmTransitions :: Map (state, symbol, symbol) (state, symbol, Movement, Movement)
   , tmBlankSymbol :: symbol
-  , tmWorkTapeLeft :: symbol  -- Z0
-  , tmInputTapeLeft :: symbol  -- Z1
-  , tmInputTapeRight :: symbol  -- Z2
+  , tmWorkTapeLeftBoundary :: symbol  -- Z0
+  , tmInputTapeLeftBoundary :: symbol  -- Z1
+  , tmInputTapeRightBoundary :: symbol  -- Z2
   }
 
 data Configuration state symbol = Configuration
@@ -53,6 +56,12 @@ data Configuration state symbol = Configuration
   , cfWorkTape :: Tape symbol     -- ^ mutable work tape
   }
   deriving (Eq, Ord, Show)
+
+instance TuringMachine.Class.TuringMachine TM where
+  type Configuration TM state symbol = Configuration state symbol
+  simulate = simulate
+  printConfiguration = printConfiguration
+
 
 -- | Simulate one step of the given Turing Machine.
 -- Returns `Nothing` if no transition exists for the current configuration.
@@ -73,9 +82,10 @@ initialConfiguration
   -> [symbol]           -- ^ the input word
   -> Configuration state symbol
 initialConfiguration TM{..} inputWord =
+  -- Note that we use `moveTape R` because the read/write head should start on the first symbol of the actual content, not on the boundary symbols
   Configuration { cfState = tmInitialState
-                , cfInputTape = moveTape R $ mkTape tmBlankSymbol ([tmInputTapeLeft] <> inputWord <> [tmInputTapeRight])
-                , cfWorkTape = moveTape R $ mkTape tmBlankSymbol [tmWorkTapeLeft]
+                , cfInputTape = moveTape R $ mkTape tmBlankSymbol ([tmInputTapeLeftBoundary] <> inputWord <> [tmInputTapeRightBoundary])
+                , cfWorkTape = moveTape R $ mkTape tmBlankSymbol [tmWorkTapeLeftBoundary]
                 }
 
 
@@ -107,13 +117,6 @@ simulate' maxSteps seenCfs tm@TM{..} cf@Configuration{..} = do
       -- TODO: Detect loop where machine just runs off the end of the tape (only encountering blanks)
 
 
-data SimulationResult
-  = Accept
-  | Reject
-  | Loop
-  | Timeout
-  deriving (Show)
-
 -- High-level TM simulation
 simulate
   :: (Ord state, Ord symbol)
@@ -130,3 +133,18 @@ simulate maxSteps tm@TM{..} inputWord =
         Right Reject' -> Reject
         Right Loop' -> Loop
   in (result, trace)
+
+
+
+printConfiguration
+    :: (PrintableTMState state, PrintableTMSymbol symbol)
+    => TM state symbol
+    -> Configuration state symbol
+    -> IO ()
+printConfiguration TM{..} Configuration{..} = do
+  putState cfState
+  putStr ":\t"
+  putTape cfInputTape
+  putChar '\t'
+  putTape cfWorkTape
+  putChar '\n'

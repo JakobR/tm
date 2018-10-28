@@ -1,10 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module TuringMachine
-  ( State
-  , Symbol
-  , Movement(..)
+  ( Movement(..)
   , TM(..)
   , Configuration(..)
   , step
@@ -13,6 +12,11 @@ module TuringMachine
   , simulate'
   , SimulationResult'(..)
   ) where
+
+-- ansi-terminal
+import System.Console.ANSI (
+  setSGR, SGR(..), ConsoleLayer(..), Color(..), ColorIntensity(..), ConsoleIntensity(..), Underlining(..)
+  )
 
 -- containers
 import Data.Map ( Map )
@@ -24,18 +28,14 @@ import qualified Data.Set as Set
 import Control.Monad.Writer ( MonadWriter(..), runWriter )
 import Control.Monad.Except ( MonadError(..), runExceptT )
 
--- text
-import Data.Text ( Text )
-
 -- safe
 import Safe ( headDef, tailSafe )
 
+-- tm
+import TuringMachine.Class ( SimulationResult(..), PrintableTMState(..), PrintableTMSymbol(..) )
+import qualified TuringMachine.Class
+import TuringMachine.Tape ( Movement(..) )
 
-type State = Text
-
-type Symbol = Char
-
-data Movement = L | S | R
 
 data TM state symbol = TM
   { tmInitialState :: state
@@ -50,6 +50,11 @@ data Configuration state symbol = Configuration
   , cfRightTape :: [symbol]  -- ^ what's to the right of the reading head (reading head points to first symbol of cfRightTape)
   }
   deriving (Eq, Ord, Show)
+
+instance TuringMachine.Class.TuringMachine TM where
+  type Configuration TM state symbol = Configuration state symbol
+  simulate = simulate
+  printConfiguration = printConfiguration
 
 
 -- | Simulate one step of the given Turing Machine.
@@ -89,13 +94,6 @@ trimBlanks3 b [x, y, z]
   | z == b = trimBlanks3 b [x, y]
 trimBlanks3 _ xs = xs
 
-data SimulationResult -- state symbol
-  = Accept
-  | Reject
-  | Loop
-  | Timeout -- (Configuration state symbol)
-  deriving (Show)
-
 simulate :: (Ord state, Ord symbol) => Int -> TM state symbol -> [symbol] -> (SimulationResult, [Configuration state symbol])
 simulate maxSteps tm@TM{..} inputWord =
   let initialCf = Configuration { cfLeftTape = []
@@ -134,3 +132,21 @@ simulate' maxSteps seenCfs tm@TM{..} cf@Configuration{..} = do
       then return Loop'
       else simulate' (maxSteps - 1) (newCf `Set.insert` seenCfs) tm newCf
       -- TODO: Detect loop where machine just runs off the end of the tape (only encountering blanks)
+
+
+printConfiguration
+    :: (PrintableTMState state, PrintableTMSymbol symbol)
+    => TM state symbol
+    -> Configuration state symbol
+    -> IO ()
+printConfiguration TM{..} Configuration{..} = do
+  putState cfState
+  putStr ":\t"
+  putSymbols $ reverse cfLeftTape
+  setSGR [ SetUnderlining SingleUnderline
+         , SetConsoleIntensity BoldIntensity
+         , SetColor Foreground Dull Yellow ]
+  putSymbol (headDef tmBlankSymbol cfRightTape)
+  setSGR []
+  putSymbols (tailSafe cfRightTape)
+  putChar '\n'

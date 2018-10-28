@@ -1,12 +1,33 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module TuringMachine.Examples where
 
 -- containers
 import qualified Data.Map as Map
+import qualified Data.Set as Set
+
+-- text
+import Data.Text ( Text )
+import qualified Data.Text as Text
 
 -- tm
 import TuringMachine
+import TuringMachine.Class
+import qualified TuringMachine.TwoTapes as TwoTapes
+
+
+type State = Text
+type Symbol = Char
+
+instance PrintableTMState State where
+  putState = putStr . Text.unpack
+
+instance PrintableTMSymbol Symbol where
+  putSymbol = putChar
+  putSymbols = putStr
 
 
 tmAL :: TM State Symbol
@@ -437,11 +458,39 @@ tmWJ = TM{..}
       , ("q4",'X') `to` ("q4",'X',L)
       ]
 
-tmForTesting :: TM State Symbol
-tmForTesting = tmWJ
+tmSS2 :: TwoTapes.TM State Symbol
+tmSS2 = TwoTapes.TM{..}
+  where
+    tmInitialState = "p"
+    tmFinalStates = Set.fromList ["v"]
+    tmBlankSymbol = 'B'
+    tmWorkTapeLeftBoundary = '0'
+    tmInputTapeLeftBoundary = '1'
+    tmInputTapeRightBoundary = '2'
+    tmTransitions = Map.fromList
+      [ ("p",'a','B') `to` ("q",'A',L,L)
 
--- t :: Text -> Char -> Text -> Char -> Movement -> ((Text, Char), (Text, Char, Movement))
--- t st sy st' sy' mv = ((st,sy),(st',sy',mv))
+      , ("q",'1','0') `to` ("q",'0',R,R)
+      , ("q",'a','A') `to` ("q",'A',R,R)
+      , ("q",'a','B') `to` ("r",'B',L,L)
 
-to :: (a,b) -> (a,b,c) -> ((a,b),(a,b,c))
+      , ("r",'a','A') `to` ("r",'A',R,L)
+      , ("r",'a','0') `to` ("s",'0',L,R)
+
+      , ("s",'a','A') `to` ("s",'A',L,R)
+      , ("s",'a','B') `to` ("s",'A',L,R)
+      , ("s",'1','B') `to` ("t",'A',S,L)
+
+      , ("t",'1','A') `to` ("t",'A',S,L)
+      , ("t",'1','0') `to` ("q",'0',S,S)
+
+      , ("q",'2','B') `to` ("u",'B',L,L)
+
+      , ("u",'a','A') `to` ("v",'A',S,S)
+      ]
+
+tmForTesting :: SomeTuringMachine State Symbol
+tmForTesting = SomeTuringMachine tmSS2
+
+to :: a -> b -> (a, b)
 to = (,)
