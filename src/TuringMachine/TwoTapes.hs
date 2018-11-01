@@ -66,7 +66,7 @@ step TM{..} Configuration{..} = do
   (nextState, symbolToWrite, inputMovement, workMovement) <- Map.lookup (cfState, readTape cfInputTape, readTape cfWorkTape) tmTransitions
   return Configuration { cfState = nextState
                        , cfInputTape = moveTape inputMovement cfInputTape
-                       , cfWorkTape = writeAndMoveTape (Just symbolToWrite) workMovement cfWorkTape
+                       , cfWorkTape = writeAndMoveTape symbolToWrite workMovement cfWorkTape
                        }
 
 initialConfiguration

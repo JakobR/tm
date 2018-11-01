@@ -55,7 +55,7 @@ writeTape
   -> Tape symbol
   -> Tape symbol
 writeTape x Tape{..} = Tape { tapeLeft = tapeLeft
-                            , tapeRight = trimBlanks3 tapeBlank $ x : tailSafe tapeRight
+                            , tapeRight = trimBlank tapeBlank $ x : tailSafe tapeRight
                             , tapeBlank = tapeBlank
                             }
 
@@ -66,35 +66,30 @@ moveTape
   -> Tape symbol
   -> Tape symbol
 moveTape L Tape{..} = Tape { tapeLeft = tailSafe tapeLeft
-                           , tapeRight = trimBlanks3 tapeBlank $ headDef tapeBlank tapeLeft : tapeRight
+                           , tapeRight = trimBlank tapeBlank $ headDef tapeBlank tapeLeft : tapeRight
                            , tapeBlank = tapeBlank
                            }
 moveTape S t = t
-moveTape R Tape{..} = Tape { tapeLeft = trimBlanks3 tapeBlank $ headDef tapeBlank tapeRight : tapeLeft
+moveTape R Tape{..} = Tape { tapeLeft = trimBlank tapeBlank $ headDef tapeBlank tapeRight : tapeLeft
                            , tapeRight = tailSafe tapeRight
                            , tapeBlank = tapeBlank
                            }
+
 -- | Writes a symbol and moves the read/write head on the tape
 writeAndMoveTape
   :: Eq symbol
-  => Maybe symbol  -- ^ the symbol to write, or Nothing to leave the tape contents unchanged
-  -> Movement  -- ^ in what direction to move
+  => symbol    -- ^ the symbol to write
+  -> Movement  -- ^ in what direction to move after writing
   -> Tape symbol
   -> Tape symbol
-writeAndMoveTape Nothing m = moveTape m
-writeAndMoveTape (Just x) m = moveTape m . writeTape x
+writeAndMoveTape x m = moveTape m . writeTape x
 
--- | Removes unneeded blank symbols at the border of the tape (only checks three symbols, which should be enough when it's done after every step)
--- Loop detection works better if we normalize the configurations
--- TODO: Removing *one* blank should actually be enough
-trimBlanks3 :: Eq symbol => symbol -> [symbol] -> [symbol]
-trimBlanks3 b [x]
+-- | Helper function to remove unneeded blank symbols at the ends of the tape.
+-- Loop detection works better if we normalize the configurations.
+trimBlank :: Eq symbol => symbol -> [symbol] -> [symbol]
+trimBlank b [x]
   | x == b = []
-trimBlanks3 b [x, y]
-  | y == b = trimBlanks3 b [x]
-trimBlanks3 b [x, y, z]
-  | z == b = trimBlanks3 b [x, y]
-trimBlanks3 _ xs = xs
+trimBlank _ xs = xs
 
 putTape
   :: PrintableTMSymbol symbol

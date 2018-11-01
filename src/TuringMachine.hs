@@ -60,7 +60,7 @@ step :: (Ord state, Ord symbol)
 step TM{..} Configuration{..} = do
   (nextState, symbolToWrite, movement) <- Map.lookup (cfState, readTape cfTape) tmTransitions
   return Configuration { cfState = nextState
-                       , cfTape = writeAndMoveTape (Just symbolToWrite) movement cfTape
+                       , cfTape = writeAndMoveTape symbolToWrite movement cfTape
                        }
 
 initialConfiguration
