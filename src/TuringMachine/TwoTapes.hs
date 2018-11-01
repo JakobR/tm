@@ -3,9 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module TuringMachine.TwoTapes
-  ( State
-  , Symbol
-  , Movement(..)
+  ( Movement(..)
   , TM(..)
   , Configuration(..)
   , initialConfiguration
@@ -26,9 +24,6 @@ import qualified Data.Set as Set
 import Control.Monad.Writer ( MonadWriter(..), runWriter )
 import Control.Monad.Except ( MonadError(..), runExceptT )
 
--- text
-import Data.Text ( Text )
-
 -- tm
 import TuringMachine.Class ( SimulationResult(..), PrintableTMState(..), PrintableTMSymbol(..) )
 import qualified TuringMachine.Class
@@ -36,10 +31,8 @@ import TuringMachine.Tape
 
 
 
-type State = Text
-
-type Symbol = Char
-
+-- | Turing machine with two tapes:
+-- an immutable input tape, and a mutable work tape.
 data TM state symbol = TM
   { tmInitialState :: state
   , tmFinalStates :: Set state
@@ -82,9 +75,12 @@ initialConfiguration
   -> [symbol]           -- ^ the input word
   -> Configuration state symbol
 initialConfiguration TM{..} inputWord =
-  -- Note that we use `moveTape R` because the read/write head should start on the first symbol of the actual content, not on the boundary symbols
+  -- Note that we use `moveTape R` because the read/write head should start on
+  -- the first symbol of the actual content, not on the boundary symbols
   Configuration { cfState = tmInitialState
-                , cfInputTape = moveTape R $ mkTape tmBlankSymbol ([tmInputTapeLeftBoundary] <> inputWord <> [tmInputTapeRightBoundary])
+                , cfInputTape = moveTape R $ mkTape tmBlankSymbol ([tmInputTapeLeftBoundary]
+                                                                   <> inputWord
+                                                                   <> [tmInputTapeRightBoundary])
                 , cfWorkTape = moveTape R $ mkTape tmBlankSymbol [tmWorkTapeLeftBoundary]
                 }
 
@@ -95,11 +91,15 @@ data SimulationResult'
   | Loop'
   deriving Show
 
--- Low-level resumable TM simulation.
+-- | Low-level resumable TM simulation.
 -- Error means timeout here.
 -- The writer accumulates a trace of configurations.
 simulate'
-  :: (Ord state, Ord symbol, MonadWriter [Configuration state symbol] m, MonadError (Configuration state symbol) m)
+  :: ( Ord state
+     , Ord symbol
+     , MonadWriter [Configuration state symbol] m
+     , MonadError (Configuration state symbol) m
+     )
   => Int   -- ^ the maximum number of steps to simulate
   -> Set (Configuration state symbol)   -- ^ already seen configuration; if we encounter such a configuration again we report an infinite loop
   -> TM state symbol
@@ -117,10 +117,10 @@ simulate' maxSteps seenCfs tm@TM{..} cf@Configuration{..} = do
       -- TODO: Detect loop where machine just runs off the end of the tape (only encountering blanks)
 
 
--- High-level TM simulation
+-- | High-level TM simulation
 simulate
   :: (Ord state, Ord symbol)
-  => Int  -- maximum number of steps to simulate
+  => Int  -- ^ the maximum number of steps to simulate
   -> TM state symbol
   -> [symbol]
   -> (SimulationResult, [Configuration state symbol])
@@ -133,7 +133,6 @@ simulate maxSteps tm@TM{..} inputWord =
         Right Reject' -> Reject
         Right Loop' -> Loop
   in (result, trace)
-
 
 
 printConfiguration
